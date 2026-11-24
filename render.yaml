@@ -1,0 +1,9 @@
+services:
+  - type: web
+    name: soon-app
+    runtime: docker
+    plan: free
+    healthCheckPath: /api/health
+    envVars:
+      - key: ADMIN_CODE
+        sync: false

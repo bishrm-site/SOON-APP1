@@ -1,0 +1,8 @@
+{
+  "name": "soon-app",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Soon: hyperlocal grocery marketplace (pilot build)",
+  "type": "module",
+  "scripts": { "start": "bun run server.js", "test": "bun test" }
+}
