@@ -1,6 +1,6 @@
 // Minimal service worker: caches the app shell so Soon opens instantly and shows a
 // friendly offline screen. API calls are never cached (stock and orders must be live).
-const CACHE = "soon-shell-v1";
+const CACHE = "soon-shell-v2";
 const SHELL = ["/", "/app.js", "/icon.svg", "/icon-192.png", "/manifest.webmanifest"];
 self.addEventListener("install", (e) => { e.waitUntil(caches.open(CACHE).then((c) => c.addAll(SHELL)).then(() => self.skipWaiting())); });
 self.addEventListener("activate", (e) => { e.waitUntil(caches.keys().then((ks) => Promise.all(ks.filter((k) => k !== CACHE).map((k) => caches.delete(k)))).then(() => self.clients.claim())); });

@@ -83,7 +83,8 @@ function reorder(id){const o=S.orders.find(x=>x.id===id),s=sh(o.shopId);S.shopId
  S.view='cart';render();if(miss)say(miss+' item(s) limited or unavailable')}
 
 function setSort(k){S.sort=k;render()}
-function addFrom(sid,iid){S.shopId=sid;S.cart={};S.view='shop';add(iid,1)}
+function addFrom(sid,iid,d=1){if(S.shopId!==sid&&cartCount()>0){const cur=sh(S.shopId),nw=sh(sid);if(!confirm('Your cart has items from '+(cur?cur.name:'another shop')+'. Replace them with items from '+(nw?nw.name:'this shop')+'?'))return;S.cart={}}S.shopId=sid;add(iid,d)}
+function doSearch(){S.q=(S.qd||'').trim();S.qd=S.q;renderList();const e=document.getElementById('q');if(e)e.blur()}
 
 function loginView(){const p=S.pick,reg=p==='shop'&&S.mode==='reg',R=S.reg,L=S.lg;
  const fe=[['🍅','8%','22%','0s'],['🥛','72%','10%','1s'],['🍞','62%','62%','2s'],['🥑','12%','72%','.5s'],['🍎','86%','42%','1.5s']].map(f=>`<span class="fe" style="left:${f[1]};top:${f[2]};animation-delay:${f[3]}">${f[0]}</span>`).join('');
@@ -121,9 +122,10 @@ function searchProducts(q){
   return `<div class="sr ${live1?'':'dis'}" style="animation-delay:${k*50}ms"><div class="im2" style="background-color:${s.bg}">${i.em}</div>
   <div style="flex:1;min-width:0"><b style="font-size:14px">${i.name}</b><div class="m2">${s.em} ${s.name}</div>
   <div class="m2"><span class="rt">★ ${s.rating}</span><span>${r.d} km</span><span>${r.e}-${r.e+8} min</span></div><div class="bdg">${live1?bd(r):''}</div></div>
-  <div class="rp"><b>${inr(i.price)}</b><small style="color:${r.a>0&&r.a<=5?'var(--coral)':'var(--mut)'};font-weight:700">${note}</small>${live1?`<button class="add" onclick="addFrom('${s.id}','${i.id}')">Add</button>`:''}</div></div>`};
+  <div class="rp"><b>${inr(i.price)}</b><small style="color:${r.a>0&&r.a<=5?'var(--coral)':'var(--mut)'};font-weight:700">${note}</small>${live1?(S.shopId===s.id&&S.cart[i.id]?`<div class="q"><button onclick="addFrom('${s.id}','${i.id}',-1)">−</button><span>${S.cart[i.id]}</span><button onclick="addFrom('${s.id}','${i.id}',1)">+</button></div>`:`<button class="add" onclick="addFrom('${s.id}','${i.id}')">Add</button>`):''}</div></div>`};
  const sg=(k,l)=>`<span class="chip ${S.sort===k?'on':''}" onclick="setSort('${k}')">${l}</span>`;
- return `<div class="h3" style="font-size:15px;margin-bottom:2px">${rows.length} shop${rows.length>1?'s':''} sell “${S.q.trim()}”</div><div class="chips" style="padding-top:6px">${sg('best','Best match')}${sg('near','Nearest')}${sg('cheap','Cheapest')}${sg('rated','Top rated')}</div>${tip}`
+ const cs=cartCount()>0&&sh(S.shopId)?`<div class="notice" style="margin:0 18px 8px;display:flex;justify-content:space-between;align-items:center;gap:8px"><span>Cart: ${cartCount()} item${cartCount()>1?'s':''} from ${sh(S.shopId).name}</span><b style="cursor:pointer;text-decoration:underline" onclick="go('cart')">View cart</b></div>`:'';
+  return cs+`<div class="h3" style="font-size:15px;margin-bottom:2px">${rows.length} shop${rows.length>1?'s':''} sell “${S.q.trim()}”</div><div class="chips" style="padding-top:6px">${sg('best','Best match')}${sg('near','Nearest')}${sg('cheap','Cheapest')}${sg('rated','Top rated')}</div>${tip}`
   +best.map(card).join('')+(rest.length?`<div class="h3" style="font-size:13px;color:var(--mut);margin-top:14px">Unavailable right now</div>`+rest.map((r,k)=>card(r,k)).join(''):'');
 }
 function shopList(){const q=S.q.trim().toLowerCase();if(q){const pr=searchProducts(q);if(pr)return pr}
@@ -145,7 +147,7 @@ function phone(){let h='';if(S.view==='wish')return wishView();if(S.view==='cart
  if(S.view==='home'){
   h=`<div class="top"><div class="sb"><span>9:41</span><span>5G ▮▮▮</span></div>
   <div class="greet"><small>${greeting()}</small><b class="d">${(S.user&&S.user.name)||'Welcome'} 👋</b></div><div class="lr"><div><small>Deliver to</small><br><b onclick="useMyLoc()" style="cursor:pointer">📍 ${S.geoBusy?'Detecting location...':LOCS[S.loc]}${S.loc===LIVEI&&LIVEI>=0?' <span style="font-size:9px;background:#C8F169;color:#082f23;padding:2px 6px;border-radius:6px;vertical-align:middle">LIVE</span>':' ▾'}</b></div><div class="av" onclick="openDrawer()" style="cursor:pointer">${(S.user&&S.user.name||'U')[0].toUpperCase()}</div></div>
-  <div class="search"><span>🔍</span><input id="q" placeholder="Search shops or items" value="${S.q}" oninput="S.q=this.value;renderList()"></div></div>
+  <div class="search"><span>🔍</span><input id="q" type="search" enterkeyhint="search" placeholder="Search shops or items" value="${S.qd!==undefined?S.qd:S.q}" oninput="S.qd=this.value;if(!this.value.trim()){S.q='';renderList()}" onkeydown="if(event.key==='Enter')doSearch()"><button class="sbtn" onclick="doSearch()">Search</button></div></div>
   <div class="areabar"><div class="ab1"><label>Choose your area</label><select class="areasel" onchange="setLoc(+this.value)">${LOCS.map((l,i)=>`<option value="${i}" ${i==S.loc?'selected':''}>${i==LIVEI&&LIVEI>=0?'📍 '+l+' (live)':l}</option>`).join('')}</select></div><div class="ab2"><label>&nbsp;</label><button class="locbtn ${S.loc===LIVEI&&LIVEI>=0?'on':''}" onclick="useMyLoc()">${S.geoBusy?'Locating...':'🎯 Current location'}</button></div></div>
   <div class="promo"><h3 class="d">Nearest shop delivers first</h3><small>Free delivery over ₹199</small><i>🛵</i></div>
   <div class="chips">${CATS.map(c=>`<span class="chip ${c==S.cat?'on':''}" onclick="setCat('${c}')">${c}</span>`).join('')}</div>
